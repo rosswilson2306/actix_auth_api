@@ -1,4 +1,7 @@
+mod users;
+
 use actix_web::{web, App, HttpServer, Responder};
+use users::init::init_users;
 
 async fn login() -> String {
     "Log in".to_string()
