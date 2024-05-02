@@ -1,12 +1,27 @@
 use std::collections::HashMap;
+use actix_web::{Responder, body::BoxBody, HttpResponse, http::header::ContentType, HttpRequest};
+use serde::{Serialize};
 use uuid::Uuid;
 
+#[derive(Serialize, Debug)]
 pub struct User {
-    id: String,
-    name: String,
-    email: String,
-    password: String,
-    role: String,
+    pub id: String,
+    pub name: String,
+    pub email: String,
+    pub password: String,
+    pub role: String,
+}
+
+impl Responder for User {
+    type Body = BoxBody;
+
+    fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
+        let body = serde_json::to_string(&self).unwrap();
+
+        HttpResponse::Ok()
+            .content_type(ContentType::json())
+            .body(body)
+    }
 }
 
 pub fn init_users() -> HashMap<String, User> {
