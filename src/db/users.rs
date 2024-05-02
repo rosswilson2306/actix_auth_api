@@ -1,7 +1,10 @@
+use actix_web::{
+    body::BoxBody, http::{header::ContentType, StatusCode}, HttpRequest, HttpResponse, Responder, ResponseError,
+};
+use serde::Serialize;
 use std::collections::HashMap;
-use actix_web::{Responder, body::BoxBody, HttpResponse, http::header::ContentType, HttpRequest};
-use serde::{Serialize};
 use uuid::Uuid;
+use derive_more::Display;
 
 #[derive(Serialize, Debug)]
 pub struct User {
@@ -21,6 +24,27 @@ impl Responder for User {
         HttpResponse::Ok()
             .content_type(ContentType::json())
             .body(body)
+    }
+}
+
+#[derive(Debug, Display)]
+pub enum UserError {
+    UserNotFound,
+    BadUserRequest,
+}
+
+impl ResponseError for UserError {
+    fn error_response(&self) -> HttpResponse {
+        HttpResponse::build(self.status_code())
+            .insert_header(ContentType::json())
+            .body(self.to_string())
+    }
+
+    fn status_code(&self) -> StatusCode {
+        match self {
+            UserError::UserNotFound => StatusCode::NOT_FOUND,
+            UserError::BadUserRequest => StatusCode::BAD_REQUEST
+        }
     }
 }
 

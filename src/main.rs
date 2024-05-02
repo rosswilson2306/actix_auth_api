@@ -1,20 +1,20 @@
 mod db;
 
 use actix_web::{web::{self, Json}, App, HttpServer, Responder, HttpResponse, error};
-use db::users::{init_users, User};
+use db::users::{init_users, User, UserError};
 use env_logger::Env;
 use std::collections::HashMap;
 
 type Users = HashMap<String, User>;
 
-async fn login(data: web::Data<Users>) -> Result<impl Responder, error::Error> {
+async fn login(data: web::Data<Users>) -> Result<impl Responder, UserError> {
     println!("{:?}", data);
-    match data.get("1") {
+    match data.get("3") {
         Some(user) => {
             Ok(HttpResponse::Ok().json(user))
         }
         None => {
-            Err(error::ErrorNotFound("User not found"))
+            Err(UserError::UserNotFound)
         }
     }
 }
