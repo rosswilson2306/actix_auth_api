@@ -13,7 +13,7 @@ async fn login(data: web::Data<Users>) -> Result<impl Responder, error::Error> {
         Some(user) => {
             Ok(HttpResponse::Ok().json(user))
         }
-        Node => {
+        None => {
             Err(error::ErrorNotFound("User not found"))
         }
     }
