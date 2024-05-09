@@ -1,17 +1,20 @@
 mod db;
+mod model;
 
 use actix_web::{
     web::{self},
     App, HttpResponse, HttpServer, Responder,
 };
-use db::users::{init_users, User, UserError};
+use db::users::init_users;
 use env_logger::Env;
+use model::user::{User, UserError};
 use std::collections::HashMap;
 
 type Users = HashMap<String, User>;
 
 async fn login(data: web::Data<Users>) -> Result<impl Responder, UserError> {
     println!("{:?}", data);
+    // TODO: use real db in order to get owned user instead of reference
     match data.get("3") {
         Some(user) => Ok(HttpResponse::Ok().json(user)),
         None => Err(UserError::UserNotFound),

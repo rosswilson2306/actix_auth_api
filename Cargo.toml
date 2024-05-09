@@ -12,6 +12,9 @@ log = "0.4.21"
 serde = { version = "^1", features = ["derive"] }
 serde_json = "1.0"
 derive_more = "0.99.17"
+surrealdb = "1.0.0"
+validator = { version = "0.16.1", features = ["derive"] }
+json = "0.12.4"
 
 [dependencies.uuid]
 version = "1.8.0"
