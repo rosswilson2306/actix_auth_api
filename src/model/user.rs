@@ -3,6 +3,7 @@ use actix_web::{
 };
 use serde::{Deserialize, Serialize};
 use derive_more::Display;
+use validator::Validate;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct User {
@@ -44,4 +45,17 @@ impl ResponseError for UserError {
             UserError::BadUserRequest => StatusCode::BAD_REQUEST
         }
     }
+}
+
+#[derive(Validate)]
+pub struct AddUserRequest {
+    #[validate(length(min = 1, message = "name required"))]
+    pub name: String,
+    #[validate(length(min = 1, message = "email required"))]
+    pub email: String,
+    #[validate(length(min = 1, message = "password required"))]
+    pub password: String,
+    #[validate(length(min = 1, message = "confirmation password required"))] // TODO: validate that
+    // passowrds match
+    pub confirm_password: String
 }

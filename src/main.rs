@@ -5,11 +5,12 @@ use crate::db::users::Database;
 use actix_web::{
     get,
     web::{self, Data, Json},
-    App, HttpResponse, HttpServer, Responder,
+    App, HttpResponse, HttpServer, Responder, post,
 };
 use db::users_trait::UserData;
 use env_logger::Env;
-use model::user::{User, UserError};
+use model::user::{User, UserError, AddUserRequest};
+use validator::Validate;
 use std::collections::HashMap;
 
 type Users = HashMap<String, User>;
@@ -38,6 +39,11 @@ async fn get_admin_users(db: Data<Database>) -> Result<Json<Vec<User>>, UserErro
         Some(found_users) => Ok(Json(found_users)),
         None => Err(UserError::UserNotFound),
     }
+}
+
+#[post("/add-user")]
+async fn add_user(body: Json<AddUserRequest>, db: Data<Database>) -> Result<Json<User>, UserError> {
+    let is_valid = body.validate();
 }
 
 async fn update_site_user() -> impl Responder {
