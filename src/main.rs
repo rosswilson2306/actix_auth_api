@@ -2,10 +2,10 @@ mod db;
 mod model;
 
 use actix_web::{
-    web::{self},
+    web::{self, Data},
     App, HttpResponse, HttpServer, Responder,
 };
-use db::users::init_users;
+use db::users::Database;
 use env_logger::Env;
 use model::user::{User, UserError};
 use std::collections::HashMap;
@@ -37,9 +37,12 @@ async fn update_site_user() -> impl Responder {
 async fn main() -> std::io::Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
 
-    HttpServer::new(|| {
+    let db = Database::init().await.expect("Error connecting to the database");
+    let db_data = Data::new(db);
+
+    HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(init_users()))
+            .app_data(db_data.clone())
             .service(
                 web::scope("/auth")
                     .route("/login", web::get().to(login))
