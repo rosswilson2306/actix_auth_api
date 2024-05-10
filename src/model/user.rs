@@ -1,10 +1,10 @@
 use actix_web::{
     body::BoxBody, http::{header::ContentType, StatusCode}, HttpRequest, HttpResponse, Responder, ResponseError,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use derive_more::Display;
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct User {
     pub id: String,
     pub name: String,

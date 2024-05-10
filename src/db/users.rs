@@ -2,7 +2,6 @@ use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
 use surrealdb::{Error, Surreal};
 
-use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::model::user::User;
@@ -16,7 +15,7 @@ pub struct Database {
 
 impl Database {
     pub async fn init() -> Result<Self, Error> {
-        let client = Surreal::new::<Ws>("127.0,0.1:8000").await?;
+        let client = Surreal::new::<Ws>("127.0.0.1:8000").await?;
         client
             .signin(Root {
                 username: "root",

@@ -1,18 +1,20 @@
 mod db;
 mod model;
 
+use crate::db::users::Database;
 use actix_web::{
-    web::{self, Data},
+    get,
+    web::{self, Data, Json},
     App, HttpResponse, HttpServer, Responder,
 };
-use db::users::Database;
+use db::users_trait::UserData;
 use env_logger::Env;
 use model::user::{User, UserError};
 use std::collections::HashMap;
 
 type Users = HashMap<String, User>;
 
-async fn login(data: web::Data<Users>) -> Result<impl Responder, UserError> {
+async fn login(data: Data<Users>) -> Result<impl Responder, UserError> {
     println!("{:?}", data);
     // TODO: use real db in order to get owned user instead of reference
     match data.get("3") {
@@ -29,6 +31,15 @@ async fn update_admin_user() -> impl Responder {
     HttpResponse::Ok().json("Update admin user")
 }
 
+#[get("/users")]
+async fn get_admin_users(db: Data<Database>) -> Result<Json<Vec<User>>, UserError> {
+    let users = Database::get_all_users(&db).await;
+    match users {
+        Some(found_users) => Ok(Json(found_users)),
+        None => Err(UserError::UserNotFound),
+    }
+}
+
 async fn update_site_user() -> impl Responder {
     HttpResponse::Ok().json("Update site user")
 }
@@ -37,14 +48,17 @@ async fn update_site_user() -> impl Responder {
 async fn main() -> std::io::Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
 
-    let db = Database::init().await.expect("Error connecting to the database");
+    let db = Database::init()
+        .await
+        .expect("Error connecting to the database");
     let db_data = Data::new(db);
 
     HttpServer::new(move || {
         App::new()
-            .app_data(db_data.clone())
+            .app_data(db_data.clone()) // TODO: Should this use an Arc?
             .service(
                 web::scope("/auth")
+                    .service(get_admin_users)
                     .route("/login", web::get().to(login))
                     .route("/verify", web::get().to(verify)),
             )
