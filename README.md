@@ -2,6 +2,7 @@
 
 A user authorization API where access to endpoints is restricted using JWTs.
 
+Users will have a role of `admin` or `site` and will be granted a JWT based on that role when logging in. The JWT will be included along with subsequent requests and used to verify access to specific endpoints.
 
 ## Tech Stack
 
