@@ -1,5 +1,5 @@
 use crate::db::users::Database;
-use crate::model::user::User;
+use crate::model::user::{UpdateUserRequest, User};
 use actix_web::web::Data;
 use surrealdb::Error;
 
@@ -7,7 +7,11 @@ pub trait UserData {
     async fn get_all_users(db: &Data<Database>) -> Option<Vec<User>>;
     async fn add_user(db: &Data<Database>, new_user: User) -> Option<User>;
     async fn get_user(db: &Data<Database>, uuid: String) -> Option<User>;
-    async fn update_user(db: &Data<Database>, user: User) -> Option<User>;
+    async fn update_user(
+        db: &Data<Database>,
+        uuid: String,
+        user: UpdateUserRequest,
+    ) -> Option<User>;
 }
 
 impl UserData for Database {
@@ -41,12 +45,34 @@ impl UserData for Database {
         }
     }
 
-    async fn update_user(db: &Data<Database>, user: User) -> Option<User> {
-        let updated_user: Result<Option<User>, Error> =
-            db.client.update(("users", &user.uuid)).content(user).await;
+    async fn update_user(
+        db: &Data<Database>,
+        uuid: String,
+        user_params: UpdateUserRequest,
+    ) -> Option<User> {
+        let find_user: Result<Option<User>, Error> = db.client.select(("users", &uuid)).await;
 
-        match updated_user {
-            Ok(user) => user,
+        match find_user {
+            Ok(_found) => match _found {
+                Some(found) => {
+                    let user = User {
+                        uuid: String::from(&found.uuid),
+                        name: user_params.name.unwrap_or(found.name),
+                        email: user_params.email.unwrap_or(found.email),
+                        password: user_params.password.unwrap_or(found.password),
+                        role: user_params.role.unwrap_or(found.role),
+                    };
+
+                    let updated_user: Result<Option<User>, Error> =
+                        db.client.update(("users", uuid)).merge(user).await;
+
+                    match updated_user {
+                        Ok(user) => user,
+                        Err(_) => None,
+                    }
+                }
+                None => None,
+            },
             Err(_) => None,
         }
     }

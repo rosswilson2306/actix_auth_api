@@ -73,11 +73,11 @@ pub struct GetUserRequest {
     pub uuid: String
 }
 
-#[derive(Validate, Serialize, Deserialize)]
+#[derive(Validate, Serialize, Deserialize, Debug)]
 pub struct UpdateUserRequest {
-    pub uuid: String,
-    pub name: String,
-    pub email: String,
-    pub password: String,
-    pub role: String,
+    pub name: Option<String>,
+    #[validate(email)]
+    pub email: Option<String>,
+    pub password: Option<String>,
+    pub role: Option<String>,
 }

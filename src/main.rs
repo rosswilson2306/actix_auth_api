@@ -23,17 +23,14 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(db_data.clone()) // TODO: Should this use an Arc?
             .service(
-                web::scope("/all") // TODO: Fix
-                    .service(get_users)
-                    .service(add_user)
-                    .service(get_user)
-                    .service(update_user),
-            )
-            .service(
                 web::scope("/auth")
                     .route("/login", web::get().to(login))
                     .route("/verify", web::get().to(verify)),
             )
+            .service(get_users)
+            .service(add_user)
+            .service(get_user)
+            .service(update_user)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

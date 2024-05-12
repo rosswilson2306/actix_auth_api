@@ -60,25 +60,19 @@ async fn add_user(body: Json<AddUserRequest>, db: Data<Database>) -> Result<Json
     }
 }
 
-#[patch("/update-user")]
+#[patch("/update-user/{uuid}")]
 async fn update_user(
     body: Json<UpdateUserRequest>,
+    path: Path<String>,
     db: Data<Database>,
 ) -> Result<Json<User>, UserError> {
+    let uuid = path.into_inner();
     let is_valid = body.validate();
 
     match is_valid {
         Ok(_) => {
             // TODO: allow optional fields in request and update only fields passed in request
-            let user_from_body = User {
-                uuid: body.uuid.clone(),
-                name: body.name.clone(),
-                email: body.email.clone(),
-                password: body.password.clone(),
-                role: body.role.clone(),
-            };
-
-            let updated_user = Database::update_user(&db, user_from_body).await;
+            let updated_user = Database::update_user(&db, uuid, body.into_inner()).await;
 
             match updated_user {
                 Some(user) => Ok(Json(user)),
@@ -87,8 +81,4 @@ async fn update_user(
         }
         Err(_) => Err(UserError::BadUserRequest),
     }
-}
-
-async fn update_site_user() -> impl Responder {
-    HttpResponse::Ok().json("Update site user")
 }
