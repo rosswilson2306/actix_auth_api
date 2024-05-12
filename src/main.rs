@@ -1,6 +1,7 @@
 mod api;
 mod db;
 mod model;
+mod utils;
 
 use crate::api::user::{add_user, get_user, get_users, login, update_user, verify};
 use crate::db::users::Database;
@@ -24,7 +25,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(db_data.clone()) // TODO: Should this use an Arc?
             .service(
                 web::scope("/auth")
-                    .route("/login", web::get().to(login))
+                    .service(login)
                     .route("/verify", web::get().to(verify)),
             )
             .service(get_users)

@@ -1,14 +1,30 @@
 use crate::db::{users::Database, users_trait::UserData};
-use crate::model::user::{AddUserRequest, GetUserRequest, UpdateUserRequest, User, UserError};
+use crate::model::auth::{LoginRequest, LoginResponse};
+use crate::model::user::{AddUserRequest, GetUserRequest, Role, UpdateUserRequest, User, UserError};
+use crate::utils::create_jwt;
 use actix_web::{
-    web::{Path, Data, Json},
-    HttpResponse, Responder, get, patch, post
+    get, patch, post,
+    web::{Data, Json, Path},
+    HttpResponse, Responder,
 };
 use uuid::Uuid;
 use validator::Validate;
 
-pub async fn login(_data: Data<Database>) -> impl Responder {
-    HttpResponse::Ok().json("Login")
+#[post("/login")]
+async fn login(
+    db: Data<Database>,
+    body: Json<LoginRequest>,
+) -> Result<Json<LoginResponse>, UserError> {
+    let user = Database::get_user_by_login(&db, body.clone()).await;
+
+    match user {
+        Some(found_user) => {
+            // TODO: role from user
+            let token = create_jwt(&found_user.uuid, &Role::Admin).map_err(|_| UserError::UserNotFound)?;
+            Ok(Json(LoginResponse { token }))
+        }
+        None => Err(UserError::UserNotFound),
+    }
 }
 
 pub async fn verify() -> impl Responder {

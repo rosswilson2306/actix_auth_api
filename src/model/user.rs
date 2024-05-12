@@ -1,9 +1,12 @@
 use actix_web::{
-    body::BoxBody, http::{header::ContentType, StatusCode}, HttpRequest, HttpResponse, Responder, ResponseError,
+    body::BoxBody,
+    http::{header::ContentType, StatusCode},
+    HttpRequest, HttpResponse, Responder, ResponseError,
 };
-use serde::{Deserialize, Serialize};
 use derive_more::Display;
+use serde::{Deserialize, Serialize};
 use validator::Validate;
+use std::fmt;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct User {
@@ -15,8 +18,17 @@ pub struct User {
 }
 
 pub enum Role {
-    Admim,
+    Admin,
     Site,
+}
+
+impl fmt::Display for Role {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Role::Admin => write!(f, "admin"),
+            Role::Site => write!(f, "site"),
+        }
+    }
 }
 
 impl Responder for User {
@@ -47,7 +59,7 @@ impl ResponseError for UserError {
     fn status_code(&self) -> StatusCode {
         match self {
             UserError::UserNotFound => StatusCode::NOT_FOUND,
-            UserError::BadUserRequest => StatusCode::BAD_REQUEST
+            UserError::BadUserRequest => StatusCode::BAD_REQUEST,
         }
     }
 }
@@ -70,7 +82,7 @@ pub struct AddUserRequest {
 
 #[derive(Serialize, Deserialize)]
 pub struct GetUserRequest {
-    pub uuid: String
+    pub uuid: String,
 }
 
 #[derive(Validate, Serialize, Deserialize, Debug)]
