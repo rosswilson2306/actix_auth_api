@@ -3,13 +3,13 @@ mod model;
 
 use crate::db::users::Database;
 use actix_web::{
-    get, post,
+    get, patch, post,
     web::{self, Data, Json, Path},
     App, HttpResponse, HttpServer, Responder,
 };
 use db::users_trait::UserData;
 use env_logger::Env;
-use model::user::{AddUserRequest, GetUserRequest, User, UserError};
+use model::user::{AddUserRequest, GetUserRequest, UpdateUserRequest, User, UserError};
 use std::collections::HashMap;
 use uuid::Uuid;
 use validator::Validate;
@@ -22,10 +22,6 @@ async fn login(data: Data<Users>) -> impl Responder {
 
 async fn verify() -> impl Responder {
     HttpResponse::Ok().body("Verify token")
-}
-
-async fn update_admin_user() -> impl Responder {
-    HttpResponse::Ok().json("Update admin user")
 }
 
 #[get("/users")]
@@ -73,6 +69,35 @@ async fn add_user(body: Json<AddUserRequest>, db: Data<Database>) -> Result<Json
     }
 }
 
+#[patch("/update-user")]
+async fn update_user(
+    body: Json<UpdateUserRequest>,
+    db: Data<Database>,
+) -> Result<Json<User>, UserError> {
+    let is_valid = body.validate();
+
+    match is_valid {
+        Ok(_) => {
+            // TODO: allow optional fields in request and update only fields passed in request
+            let user_from_body = User {
+                uuid: body.uuid.clone(),
+                name: body.name.clone(),
+                email: body.email.clone(),
+                password: body.password.clone(),
+                role: body.role.clone(),
+            };
+
+            let updated_user = Database::update_user(&db, user_from_body).await;
+
+            match updated_user {
+                Some(user) => Ok(Json(user)),
+                None => Err(UserError::BadUserRequest),
+            }
+        }
+        Err(_) => Err(UserError::BadUserRequest),
+    }
+}
+
 async fn update_site_user() -> impl Responder {
     HttpResponse::Ok().json("Update site user")
 }
@@ -93,14 +118,14 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/all") // TODO: Fix
                     .service(get_users)
                     .service(add_user)
-                    .service(get_user),
+                    .service(get_user)
+                    .service(update_user),
             )
             .service(
                 web::scope("/auth")
                     .route("/login", web::get().to(login))
                     .route("/verify", web::get().to(verify)),
             )
-            .service(web::scope("/admin").route("/update", web::patch().to(update_admin_user)))
             .service(web::scope("/site").route("/update", web::patch().to(update_site_user)))
     })
     .bind(("127.0.0.1", 8080))?

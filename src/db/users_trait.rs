@@ -7,6 +7,7 @@ pub trait UserData {
     async fn get_all_users(db: &Data<Database>) -> Option<Vec<User>>;
     async fn add_user(db: &Data<Database>, new_user: User) -> Option<User>;
     async fn get_user(db: &Data<Database>, uuid: String) -> Option<User>;
+    async fn update_user(db: &Data<Database>, user: User) -> Option<User>;
 }
 
 impl UserData for Database {
@@ -35,6 +36,16 @@ impl UserData for Database {
         let find_user: Result<Option<User>, Error> = db.client.select(("users", &uuid)).await;
 
         match find_user {
+            Ok(user) => user,
+            Err(_) => None,
+        }
+    }
+
+    async fn update_user(db: &Data<Database>, user: User) -> Option<User> {
+        let updated_user: Result<Option<User>, Error> =
+            db.client.update(("users", &user.uuid)).content(user).await;
+
+        match updated_user {
             Ok(user) => user,
             Err(_) => None,
         }

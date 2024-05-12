@@ -72,3 +72,12 @@ pub struct AddUserRequest {
 pub struct GetUserRequest {
     pub uuid: String
 }
+
+#[derive(Validate, Serialize, Deserialize)]
+pub struct UpdateUserRequest {
+    pub uuid: String,
+    pub name: String,
+    pub email: String,
+    pub password: String,
+    pub role: String,
+}
