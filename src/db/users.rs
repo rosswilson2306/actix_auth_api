@@ -2,10 +2,6 @@ use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
 use surrealdb::{Error, Surreal};
 
-use uuid::Uuid;
-
-use crate::model::user::User;
-
 #[derive(Clone)]
 pub struct Database {
     pub client: Surreal<Client>,

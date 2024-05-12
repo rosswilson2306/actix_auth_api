@@ -7,7 +7,7 @@ use validator::Validate;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct User {
-    pub id: String,
+    pub uuid: String,
     pub name: String,
     pub email: String,
     pub password: String,
@@ -47,7 +47,7 @@ impl ResponseError for UserError {
     }
 }
 
-#[derive(Validate)]
+#[derive(Validate, Serialize, Deserialize)]
 pub struct AddUserRequest {
     #[validate(length(min = 1, message = "name required"))]
     pub name: String,
@@ -57,5 +57,7 @@ pub struct AddUserRequest {
     pub password: String,
     #[validate(length(min = 1, message = "confirmation password required"))] // TODO: validate that
     // passowrds match
-    pub confirm_password: String
+    pub confirm_password: String,
+    // TODO: one of the two roles
+    pub role: String,
 }

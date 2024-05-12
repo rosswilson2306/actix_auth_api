@@ -17,7 +17,7 @@ impl UserData for Database {
     }
 
     async fn add_user(db: &Data<Database>, new_user: User) -> Option<User> {
-        let result = db.client.create(("users", new_user.id.clone())).content(new_user).await;
+        let result = db.client.create(("users", new_user.uuid.clone())).content(new_user).await;
 
         match result {
             Ok(user) => user,

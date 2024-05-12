@@ -3,25 +3,21 @@ mod model;
 
 use crate::db::users::Database;
 use actix_web::{
-    get,
+    get, post,
     web::{self, Data, Json},
-    App, HttpResponse, HttpServer, Responder, post,
+    App, HttpResponse, HttpServer, Responder,
 };
 use db::users_trait::UserData;
 use env_logger::Env;
-use model::user::{User, UserError, AddUserRequest};
-use validator::Validate;
+use model::user::{AddUserRequest, User, UserError};
 use std::collections::HashMap;
+use uuid::Uuid;
+use validator::Validate;
 
 type Users = HashMap<String, User>;
 
-async fn login(data: Data<Users>) -> Result<impl Responder, UserError> {
-    println!("{:?}", data);
-    // TODO: use real db in order to get owned user instead of reference
-    match data.get("3") {
-        Some(user) => Ok(HttpResponse::Ok().json(user)),
-        None => Err(UserError::UserNotFound),
-    }
+async fn login(data: Data<Users>) -> impl Responder {
+    HttpResponse::Ok().json("Login")
 }
 
 async fn verify() -> impl Responder {
@@ -33,7 +29,7 @@ async fn update_admin_user() -> impl Responder {
 }
 
 #[get("/users")]
-async fn get_admin_users(db: Data<Database>) -> Result<Json<Vec<User>>, UserError> {
+async fn get_users(db: Data<Database>) -> Result<Json<Vec<User>>, UserError> {
     let users = Database::get_all_users(&db).await;
     match users {
         Some(found_users) => Ok(Json(found_users)),
@@ -44,6 +40,26 @@ async fn get_admin_users(db: Data<Database>) -> Result<Json<Vec<User>>, UserErro
 #[post("/add-user")]
 async fn add_user(body: Json<AddUserRequest>, db: Data<Database>) -> Result<Json<User>, UserError> {
     let is_valid = body.validate();
+
+    match is_valid {
+        Ok(_) => {
+            let user_from_body = User {
+                uuid: Uuid::new_v4().to_string(),
+                name: body.name.clone(),
+                email: body.email.clone(),
+                password: body.password.clone(),
+                role: body.role.clone(),
+            };
+
+            let new_user = Database::add_user(&db, user_from_body).await;
+
+            match new_user {
+                Some(created_user) => Ok(Json(created_user)),
+                None => Err(UserError::BadUserRequest),
+            }
+        }
+        Err(_) => Err(UserError::BadUserRequest),
+    }
 }
 
 async fn update_site_user() -> impl Responder {
@@ -62,9 +78,12 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(db_data.clone()) // TODO: Should this use an Arc?
+            .service(web::scope("/all") // TODO: Fix
+                .service(get_users)
+                .service(add_user)
+            )
             .service(
                 web::scope("/auth")
-                    .service(get_admin_users)
                     .route("/login", web::get().to(login))
                     .route("/verify", web::get().to(verify)),
             )
