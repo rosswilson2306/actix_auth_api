@@ -3,7 +3,8 @@ use crate::model::auth::{LoginRequest, LoginResponse};
 use crate::model::user::{
     AddUserRequest, GetUserRequest, Role, UpdateUserRequest, User, UserError,
 };
-use crate::utils::create_jwt;
+use crate::utils::{create_jwt, get_jwt_from_headers};
+use actix_web::HttpRequest;
 use actix_web::{
     get, patch, post,
     web::{Data, Json, Path},
@@ -35,7 +36,12 @@ pub async fn verify() -> impl Responder {
 }
 
 #[get("/users")]
-async fn get_users(db: Data<Database>) -> Result<Json<Vec<User>>, UserError> {
+async fn get_users(req: HttpRequest, db: Data<Database>) -> Result<Json<Vec<User>>, UserError> {
+    let headers = req.headers();
+    let jwt = get_jwt_from_headers(headers);
+
+    println!("{:?}", jwt);
+
     let users = Database::get_all_users(&db).await;
     match users {
         Some(found_users) => Ok(Json(found_users)),
