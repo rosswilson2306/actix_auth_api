@@ -4,12 +4,12 @@ mod model;
 use crate::db::users::Database;
 use actix_web::{
     get, post,
-    web::{self, Data, Json},
+    web::{self, Data, Json, Path},
     App, HttpResponse, HttpServer, Responder,
 };
 use db::users_trait::UserData;
 use env_logger::Env;
-use model::user::{AddUserRequest, User, UserError};
+use model::user::{AddUserRequest, GetUserRequest, User, UserError};
 use std::collections::HashMap;
 use uuid::Uuid;
 use validator::Validate;
@@ -33,6 +33,17 @@ async fn get_users(db: Data<Database>) -> Result<Json<Vec<User>>, UserError> {
     let users = Database::get_all_users(&db).await;
     match users {
         Some(found_users) => Ok(Json(found_users)),
+        None => Err(UserError::UserNotFound),
+    }
+}
+
+#[get("users/{uuid}")]
+async fn get_user(path: Path<GetUserRequest>, db: Data<Database>) -> Result<Json<User>, UserError> {
+    let uuid = path.into_inner().uuid;
+    let result = Database::get_user(&db, uuid).await;
+
+    match result {
+        Some(user) => Ok(Json(user)),
         None => Err(UserError::UserNotFound),
     }
 }
@@ -78,9 +89,11 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(db_data.clone()) // TODO: Should this use an Arc?
-            .service(web::scope("/all") // TODO: Fix
-                .service(get_users)
-                .service(add_user)
+            .service(
+                web::scope("/all") // TODO: Fix
+                    .service(get_users)
+                    .service(add_user)
+                    .service(get_user),
             )
             .service(
                 web::scope("/auth")

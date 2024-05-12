@@ -67,3 +67,8 @@ pub struct AddUserRequest {
     // TODO: one of the two roles
     pub role: String,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct GetUserRequest {
+    pub uuid: String
+}
