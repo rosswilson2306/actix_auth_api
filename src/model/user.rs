@@ -14,6 +14,11 @@ pub struct User {
     pub role: String,
 }
 
+pub enum Role {
+    Admim,
+    Site,
+}
+
 impl Responder for User {
     type Body = BoxBody;
 
@@ -51,11 +56,12 @@ impl ResponseError for UserError {
 pub struct AddUserRequest {
     #[validate(length(min = 1, message = "name required"))]
     pub name: String,
-    #[validate(length(min = 1, message = "email required"))]
+    #[validate(email)]
     pub email: String,
     #[validate(length(min = 1, message = "password required"))]
     pub password: String,
     #[validate(length(min = 1, message = "confirmation password required"))] // TODO: validate that
+    #[validate(must_match = "password")]
     // passowrds match
     pub confirm_password: String,
     // TODO: one of the two roles
