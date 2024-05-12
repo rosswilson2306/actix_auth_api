@@ -38,7 +38,27 @@ TODO
 
 ## API Reference
 
-#### Get all items
+#### Get all users
+
+```http
+  POST /all/add-user
+```
+
+| Parameter | Type     | Description                  |
+| :-------- | :------- | :--------------------------- |
+| `body`    | `User`   | **Required**. { "name": string; "email": string; "password": string; "confirm_password": string; "role": string } |
+
+#### Get all users
+
+```http
+  GET /all/users
+```
+
+| Parameter | Type     | Description                  |
+| :-------- | :------- | :--------------------------- |
+| `token`   | `string` | **Required**. JSON Web Token |
+
+#### Login user
 
 ```http
   GET /auth/login
@@ -48,7 +68,7 @@ TODO
 | :-------- | :------- | :------------------------- |
 | `api_key` | `string` | **Required**. Your API key |
 
-#### Get item
+#### Verify token
 
 ```http
   GET /auth/verify/${token}
