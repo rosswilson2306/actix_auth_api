@@ -1,6 +1,8 @@
 use crate::db::{users::Database, users_trait::UserData};
 use crate::model::auth::{LoginRequest, LoginResponse};
-use crate::model::user::{AddUserRequest, GetUserRequest, Role, UpdateUserRequest, User, UserError};
+use crate::model::user::{
+    AddUserRequest, GetUserRequest, Role, UpdateUserRequest, User, UserError,
+};
 use crate::utils::create_jwt;
 use actix_web::{
     get, patch, post,
@@ -18,12 +20,13 @@ async fn login(
     let user = Database::get_user_by_login(&db, body.clone()).await;
 
     match user {
-        Some(found_user) => {
+        Ok(found_user) => {
             // TODO: role from user
-            let token = create_jwt(&found_user.uuid, &Role::Admin).map_err(|_| UserError::UserNotFound)?;
+            let token =
+                create_jwt(&found_user.uuid, &Role::Admin).map_err(|_| UserError::LoginFailure)?;
             Ok(Json(LoginResponse { token }))
         }
-        None => Err(UserError::UserNotFound),
+        Err(_) => Err(UserError::UserNotFound),
     }
 }
 

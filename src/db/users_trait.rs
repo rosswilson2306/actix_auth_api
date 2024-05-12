@@ -1,6 +1,6 @@
 use crate::db::users::Database;
 use crate::model::auth::LoginRequest;
-use crate::model::user::{UpdateUserRequest, User};
+use crate::model::user::{UpdateUserRequest, User, UserError};
 use actix_web::web::Data;
 use surrealdb::Error;
 
@@ -14,7 +14,8 @@ pub trait UserData {
         uuid: String,
         user: UpdateUserRequest,
     ) -> Option<User>;
-    async fn get_user_by_login(db: &Data<Database>, creds: LoginRequest) -> Option<User>;
+    async fn get_user_by_login(db: &Data<Database>, creds: LoginRequest)
+        -> Result<User, UserError>;
 }
 
 impl UserData for Database {
@@ -48,15 +49,22 @@ impl UserData for Database {
         }
     }
 
-    async fn get_user_by_login(db: &Data<Database>, creds: LoginRequest) -> Option<User> {
-        // TODO: explore using query to select user with the correct fields as select isn't working
-        // with uuid
-        // TODO: password validation
-        let find_user: Result<Option<User>, Error> = db.client.select(("users", creds.email)).await;
+    async fn get_user_by_login(
+        db: &Data<Database>,
+        creds: LoginRequest,
+    ) -> Result<User, UserError> {
+        let users: Vec<User> = db
+            .client
+            .select("users")
+            .await
+            .map_err(|_| UserError::UserNotFound)?;
+        let matched_user = users
+            .iter()
+            .find(|user| user.email == creds.email && user.password == creds.password);
 
-        match find_user {
-            Ok(user) => user,
-            Err(_) => None,
+        match matched_user {
+            Some(user) => Ok(user.clone()),
+            None => Err(UserError::UserNotFound),
         }
     }
 

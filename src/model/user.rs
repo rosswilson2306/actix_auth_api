@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 use std::fmt;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct User {
     pub uuid: String,
     pub name: String,
@@ -46,6 +46,7 @@ impl Responder for User {
 #[derive(Debug, Display)]
 pub enum UserError {
     UserNotFound,
+    LoginFailure,
     BadUserRequest,
 }
 
@@ -59,6 +60,7 @@ impl ResponseError for UserError {
     fn status_code(&self) -> StatusCode {
         match self {
             UserError::UserNotFound => StatusCode::NOT_FOUND,
+            UserError::LoginFailure => StatusCode::NOT_FOUND,
             UserError::BadUserRequest => StatusCode::BAD_REQUEST,
         }
     }

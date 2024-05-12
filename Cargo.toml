@@ -17,6 +17,7 @@ validator = { version = "0.16.1", features = ["derive"] }
 json = "0.12.4"
 chrono = "0.4.38"
 jsonwebtoken = "9.3.0"
+dotenv = "0.15.0"
 
 [dependencies.uuid]
 version = "1.8.0"

@@ -10,9 +10,11 @@ use actix_web::{
     App, HttpServer,
 };
 use env_logger::Env;
+use dotenv::dotenv;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv().ok();
     env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
 
     let db = Database::init()
