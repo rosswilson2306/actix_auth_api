@@ -1,5 +1,5 @@
 use crate::model::{
-    auth::{Claims, JWTError},
+    auth::{AuthError, Claims},
     user::Role,
 };
 use actix_web::http::header::HeaderMap;
@@ -14,16 +14,7 @@ pub enum VerificationStatus {
     Denied,
 }
 
-#[derive(Debug)]
-pub enum VerificationError {
-    NoAuthToken,
-    InvalidAuthHeader,
-    MissingSecret,
-    InvalidToken,
-    Unauthorized,
-}
-
-pub fn create_jwt(uuid: &str, role: &Role) -> Result<String, JWTError> {
+pub fn create_jwt(uuid: &str, role: &Role) -> Result<String, AuthError> {
     let expiration = Utc::now()
         .checked_add_signed(chrono::Duration::seconds(60))
         .expect("valid timestamp")
@@ -35,29 +26,29 @@ pub fn create_jwt(uuid: &str, role: &Role) -> Result<String, JWTError> {
         exp: expiration as usize,
     };
 
-    let secret = env::var("JWT_SECRET").map_err(|_| JWTError::CreationFailure)?;
+    let secret = env::var("JWT_SECRET").map_err(|_| AuthError::TokenCreationFailure)?;
 
     encode(
         &Header::default(),
         &claims,
         &EncodingKey::from_secret(secret.as_ref()),
     )
-    .map_err(|_| JWTError::CreationFailure)
+    .map_err(|_| AuthError::TokenCreationFailure)
 }
 
-pub fn authorize(role: Role, headers: &HeaderMap) -> Result<String, VerificationError> {
+pub fn authorize(role: Role, headers: &HeaderMap) -> Result<String, AuthError> {
     match get_jwt_from_headers(headers) {
         Ok(jwt) => {
-            let secret = env::var("JWT_SECRET").map_err(|_| VerificationError::MissingSecret)?;
+            let secret = env::var("JWT_SECRET").map_err(|_| AuthError::MissingSecret)?;
             let decoded = decode::<Claims>(
                 &jwt,
                 &DecodingKey::from_secret(secret.as_ref()),
                 &Validation::default(),
             )
-            .map_err(|_| VerificationError::InvalidToken)?;
+            .map_err(|_| AuthError::InvalidToken)?;
 
             if role == Role::Admin && Role::from_str(&decoded.claims.role) != Role::Admin {
-                return Err(VerificationError::Unauthorized)
+                return Err(AuthError::Unauthorized)
             }
 
             // TODO: should this return a status instead
@@ -67,20 +58,20 @@ pub fn authorize(role: Role, headers: &HeaderMap) -> Result<String, Verification
     }
 }
 
-pub fn get_jwt_from_headers(headers: &HeaderMap) -> Result<String, VerificationError> {
+pub fn get_jwt_from_headers(headers: &HeaderMap) -> Result<String, AuthError> {
     // TODO: refactor to reduce match blocks
     let auth_result = match headers.get("authorization") {
         Some(v) => v.to_str(),
-        None => return Err(VerificationError::NoAuthToken),
+        None => return Err(AuthError::NoAuthToken),
     };
 
     let auth_header = match auth_result {
         Ok(v) => v,
-        Err(_) => return Err(VerificationError::NoAuthToken),
+        Err(_) => return Err(AuthError::NoAuthToken),
     };
 
     if !auth_header.starts_with(BEARER) {
-        return Err(VerificationError::InvalidAuthHeader);
+        return Err(AuthError::InvalidAuthHeader);
     }
 
     Ok(auth_header.trim_start_matches(BEARER).to_owned())

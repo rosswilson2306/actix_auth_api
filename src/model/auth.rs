@@ -7,10 +7,14 @@ pub struct Claims {
     pub exp: usize,
 }
 
-pub enum JWTError {
-    CreationFailure,
-    VerifyFailure,
+#[derive(Debug)]
+pub enum AuthError {
+    TokenCreationFailure,
+    NoAuthToken,
+    InvalidAuthHeader,
+    MissingSecret,
     InvalidToken,
+    Unauthorized,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
