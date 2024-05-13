@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub role: String,
     pub sub: String,
@@ -10,6 +10,7 @@ pub struct Claims {
 pub enum JWTError {
     CreationFailure,
     VerifyFailure,
+    InvalidToken,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

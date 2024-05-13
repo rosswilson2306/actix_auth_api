@@ -53,6 +53,7 @@ impl UserData for Database {
         db: &Data<Database>,
         creds: LoginRequest,
     ) -> Result<User, UserError> {
+        // TODO: this should be done with a db query
         let users: Vec<User> = db
             .client
             .select("users")

@@ -1,7 +1,7 @@
 mod api;
 mod db;
 mod model;
-mod utils;
+mod auth;
 
 use crate::api::user::{add_user, get_user, get_users, login, update_user, verify};
 use crate::db::users::Database;

@@ -3,7 +3,7 @@ use crate::model::auth::{LoginRequest, LoginResponse};
 use crate::model::user::{
     AddUserRequest, GetUserRequest, Role, UpdateUserRequest, User, UserError,
 };
-use crate::utils::{create_jwt, get_jwt_from_headers};
+use crate::auth::{authorize, create_jwt};
 use actix_web::HttpRequest;
 use actix_web::{
     get, patch, post,
@@ -38,9 +38,8 @@ pub async fn verify() -> impl Responder {
 #[get("/users")]
 async fn get_users(req: HttpRequest, db: Data<Database>) -> Result<Json<Vec<User>>, UserError> {
     let headers = req.headers();
-    let jwt = get_jwt_from_headers(headers);
-
-    println!("{:?}", jwt);
+    // TODO: remove from here as this request won't block access
+    let authorized = authorize(Role::Admin, headers);
 
     let users = Database::get_all_users(&db).await;
     match users {
@@ -65,6 +64,7 @@ async fn add_user(body: Json<AddUserRequest>, db: Data<Database>) -> Result<Json
     let is_valid = body.validate();
 
     match is_valid {
+        // TODO: investigate refactoring to avoid clones
         Ok(_) => {
             let user_from_body = User {
                 uuid: Uuid::new_v4().to_string(),

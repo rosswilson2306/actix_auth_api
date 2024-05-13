@@ -5,8 +5,8 @@ use actix_web::{
 };
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
-use validator::Validate;
 use std::fmt;
+use validator::Validate;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct User {
@@ -17,9 +17,19 @@ pub struct User {
     pub role: String,
 }
 
+#[derive(PartialEq)]
 pub enum Role {
     Admin,
     Site,
+}
+
+impl Role {
+    pub fn from_str(role: &str) -> Role {
+        match role {
+            "admin" => Role::Admin,
+            _ => Role::Site,
+        }
+    }
 }
 
 impl fmt::Display for Role {
