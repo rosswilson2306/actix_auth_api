@@ -34,11 +34,8 @@ async fn get_users(req: HttpRequest, db: Data<Database>) -> Result<Json<Vec<User
 
     match authorized {
         Ok(_) => {
-            let users = Database::get_all_users(&db).await;
-            match users {
-                Some(found_users) => Ok(Json(found_users)),
-                None => Err(Error::UserNotFound),
-            }
+            let users = Database::get_all_users(&db).await?;
+            Ok(Json(users))
         }
         Err(_) => Err(Error::AccessForbidden),
     }
