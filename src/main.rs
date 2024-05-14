@@ -31,7 +31,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/auth")
                     .service(login)
-                    .route("/verify", web::get().to(verify)),
+                    .service(verify)
             )
             .service(get_users)
             .service(add_user)

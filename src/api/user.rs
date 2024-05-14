@@ -32,6 +32,7 @@ async fn login(
     }
 }
 
+#[get("/verify")]
 pub async fn verify() -> impl Responder {
     HttpResponse::Ok().body("Verify token")
 }
