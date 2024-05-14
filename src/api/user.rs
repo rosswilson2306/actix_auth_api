@@ -1,10 +1,8 @@
-use crate::{Result, Error};
 use crate::auth::{authorize, create_jwt};
 use crate::db::{users::Database, users_trait::UserData};
 use crate::model::auth::{LoginRequest, LoginResponse};
-use crate::model::user::{
-    AddUserRequest, GetUserRequest, Role, UpdateUserRequest, User,
-};
+use crate::model::user::{AddUserRequest, GetUserRequest, Role, UpdateUserRequest, User};
+use crate::{Error, Result};
 use actix_web::HttpRequest;
 use actix_web::{
     get, patch, post,
@@ -15,21 +13,12 @@ use uuid::Uuid;
 use validator::Validate;
 
 #[post("/login")]
-async fn login(
-    db: Data<Database>,
-    body: Json<LoginRequest>,
-) -> Result<Json<LoginResponse>> {
-    let user = Database::get_user_by_login(&db, body.clone()).await;
+async fn login(db: Data<Database>, body: Json<LoginRequest>) -> Result<Json<LoginResponse>> {
+    let user = Database::get_user_by_login(&db, body.clone()).await?;
 
-    match user {
-        Ok(found_user) => {
-            // TODO: role from user
-            let token =
-                create_jwt(&found_user.uuid, &Role::Admin).map_err(|_| Error::LoginFailure)?;
-            Ok(Json(LoginResponse { token }))
-        }
-        Err(_) => Err(Error::UserNotFound),
-    }
+    // TODO: role from user
+    let token = create_jwt(&user.uuid, &Role::Admin)?;
+    Ok(Json(LoginResponse { token }))
 }
 
 #[get("/verify")]
