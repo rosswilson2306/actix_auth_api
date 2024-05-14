@@ -2,6 +2,7 @@ mod api;
 mod db;
 mod model;
 mod auth;
+mod error;
 
 use crate::api::user::{add_user, get_user, get_users, login, update_user, verify};
 use crate::db::users::Database;
@@ -11,6 +12,8 @@ use actix_web::{
 };
 use env_logger::Env;
 use dotenv::dotenv;
+
+pub use self::error::{Error, Result};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
