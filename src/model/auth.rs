@@ -7,15 +7,14 @@ pub struct Claims {
     pub exp: usize,
 }
 
-#[derive(Debug)]
-pub enum AuthError {
-    TokenCreationFailure,
-    NoAuthToken,
-    InvalidAuthHeader,
-    MissingSecret,
-    InvalidToken,
-    Unauthorized,
-}
+// #[derive(Debug)]
+// pub enum Error {
+//     TokenCreationFailure,
+//     NoAuthToken,
+//     InvalidAuthHeader,
+//     MissingSecret,
+//     InvalidToken,
+// }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct LoginRequest {

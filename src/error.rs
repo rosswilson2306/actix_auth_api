@@ -1,4 +1,7 @@
-use actix_web::{http::{header::ContentType, StatusCode}, HttpResponse, ResponseError};
+use actix_web::{
+    http::{header::ContentType, StatusCode},
+    HttpResponse, ResponseError,
+};
 use derive_more::From;
 use serde::Serialize;
 
@@ -6,10 +9,19 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug, From, Serialize)]
 pub enum Error {
+    // -- user
     UserNotFound,
     LoginFailure,
     BadUserRequest,
+
+    // TODO: move to auth::Error and derive from here
+    // --auth
     AccessForbidden,
+    TokenCreationFailure,
+    NoAuthToken,
+    InvalidAuthHeader,
+    MissingSecret,
+    InvalidToken,
 }
 
 impl core::fmt::Display for Error {
@@ -33,6 +45,11 @@ impl ResponseError for Error {
             Error::LoginFailure => StatusCode::UNAUTHORIZED,
             Error::BadUserRequest => StatusCode::BAD_REQUEST,
             Error::AccessForbidden => StatusCode::FORBIDDEN,
+            Error::TokenCreationFailure => StatusCode::BAD_REQUEST,
+            Error::NoAuthToken => StatusCode::UNAUTHORIZED,
+            Error::InvalidAuthHeader => StatusCode::BAD_REQUEST,
+            Error::MissingSecret => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::InvalidToken => StatusCode::FORBIDDEN,
         }
     }
 }
