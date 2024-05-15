@@ -9,7 +9,7 @@ use surrealdb;
 pub trait UserData {
     async fn get_all_users(db: &Data<Database>) -> Result<Vec<User>>;
     async fn add_user(db: &Data<Database>, new_user: User) -> Option<User>;
-    async fn get_user(db: &Data<Database>, uuid: String) -> Option<User>;
+    async fn get_user(db: &Data<Database>, uuid: String) -> Result<User>;
     async fn update_user(
         db: &Data<Database>,
         uuid: String,
@@ -42,13 +42,13 @@ impl UserData for Database {
         }
     }
 
-    async fn get_user(db: &Data<Database>, uuid: String) -> Option<User> {
+    async fn get_user(db: &Data<Database>, uuid: String) -> Result<User> {
         let find_user: std::result::Result<Option<User>, surrealdb::Error> =
             db.client.select(("users", &uuid)).await;
 
         match find_user {
-            Ok(user) => user,
-            Err(_) => None,
+            Ok(user) => user.ok_or(Error::UserNotFound),
+            Err(_) => Err(Error::UserNotFound),
         }
     }
 

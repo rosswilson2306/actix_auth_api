@@ -16,8 +16,7 @@ use validator::Validate;
 async fn login(db: Data<Database>, body: Json<LoginRequest>) -> Result<Json<LoginResponse>> {
     let user = Database::get_user_by_login(&db, body.clone()).await?;
 
-    // TODO: role from user
-    let token = create_jwt(&user.uuid, &Role::Admin)?;
+    let token = create_jwt(&user.uuid, &Role::from_str(&user.role))?;
     Ok(Json(LoginResponse { token }))
 }
 
@@ -44,12 +43,9 @@ async fn get_users(req: HttpRequest, db: Data<Database>) -> Result<Json<Vec<User
 #[get("users/{uuid}")]
 async fn get_user(path: Path<GetUserRequest>, db: Data<Database>) -> Result<Json<User>> {
     let uuid = path.into_inner().uuid;
-    let result = Database::get_user(&db, uuid).await;
+    let user = Database::get_user(&db, uuid).await?;
 
-    match result {
-        Some(user) => Ok(Json(user)),
-        None => Err(Error::UserNotFound),
-    }
+    Ok(Json(user))
 }
 
 #[post("/add-user")]
